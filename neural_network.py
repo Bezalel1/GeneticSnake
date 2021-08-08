@@ -1,6 +1,4 @@
 import numpy as np
-import pandas as pd
-import scipy as sc
 from typing import Callable, NewType
 
 Activation = NewType('Activation', Callable[[np.ndarray], np.ndarray])
@@ -83,53 +81,5 @@ class NN:
 
     @staticmethod
     def init_W(layers):
-        # np.random.seed(98) , * 0.12 * 2 - 0.12
         return np.array([np.random.rand(l1, l0 + 1) * 0.24 - 0.12 for l0, l1 in zip(layers[:-1], layers[1:])],
                         dtype=np.object)
-
-
-if __name__ == '__main__':
-    df = pd.read_csv('/home/bb/Downloads/data/iris.data')
-    from scipy.stats import zscore
-
-    # z = np.abs(zscore(df.iloc[:, :4]))
-    z = np.abs(zscore(df.iloc[:, 1]))
-
-    median = df.iloc[np.where(z <= 3)[0], 1].median()
-    df.iloc[np.where(z > 3)[0], 1] = np.nan
-    df.fillna(median, inplace=True)
-
-    df0 = df.sample(frac=0.96, random_state=42)
-    holdout = df.drop(df0.index)
-    # Separate the feature columns (first 4) from the labels column (5th column)
-    x = df0.iloc[:, :4]
-    y = df0.iloc[:, 4]
-    x_standard = x.apply(zscore)
-    species_names = np.unique(np.array(y))
-
-    # one hot encode the labels since they are categorical
-    y_cat = pd.get_dummies(y, prefix='cat')
-    y_cat.sample(10, random_state=42)
-    from sklearn.model_selection import train_test_split
-
-    x_train, x_test, y_train, y_test = train_test_split(x_standard, y_cat, test_size=0.5, random_state=42)
-    x_train, y_train = x_train.to_numpy(), np.argmax(y_train.to_numpy(), axis=1)
-    x_test, y_test = x_test.to_numpy(), np.argmax(y_test.to_numpy(), axis=1)
-
-    file_name = 'W.npy'
-    model = NN(np.load(file_name, allow_pickle=True), alpha=0.0005, landa=0.1)  # NN.init_W([4, 2, 2, 3])
-    # model = NN(NN.init_W([4, 10, 6, 3]), alpha=2, landa=3)  # NN.init_W([4, 2, 2, 3])
-
-    print(model.cost(x_train, y_train))
-    model.fit(x_train, y_train, max_iter=100)
-    print(model.cost(x_train, y_train))
-    model.fit(x_train, y_train, max_iter=1000)
-    print(model.cost(x_train, y_train))
-    model.fit(x_train, y_train, max_iter=1000)
-    print(model.cost(x_train, y_train))
-    model.save()
-    # print('------------------------------------')
-    # # print(model.W[0])
-    print(np.hstack((model.predict(x_test).reshape((-1, 1)), y_test.reshape((-1, 1)))))
-    # print(np.mean(y))
-    print(model.cost(x_test, y_test))

@@ -1,8 +1,5 @@
 import numpy as np
-# from abc import ABC, abstractmethod
-# from threading import Thread, Lock
 from typing import NamedTuple
-# import time
 import random
 # internal imports
 import snake
@@ -16,7 +13,6 @@ class State(NamedTuple):
     apple_location: snake.Point
     head_direction: int
     length: int
-    game_over: bool
 
 
 class Data:
@@ -44,6 +40,8 @@ class Data:
 
     def setX(self, state: State) -> None:
         """
+        prepare vector X with the current parameters [wall,body,apple,length,...]
+            for the neural network prediction
         """
         x, y = int(state.snake_body[0].x), int(state.snake_body[0].y)
 
@@ -88,6 +86,10 @@ class Data:
         self.X[self.length_idx] = state.length
 
     def __str__(self) -> str:
+        """
+        print details of X for debugging
+        :return: X in string representation
+        """
         data = '--- data ---\n'
         data += f'distance to wall: right={self[snake.RIGHT]}, '
         data += f'left={self[snake.LEFT]}, up={self[snake.UP]}, down={self[snake.DOWN]}\n'
@@ -96,7 +98,8 @@ class Data:
         data += f' left={self[i + snake.LEFT]}, up={self[i + snake.UP]}, down={self[i + snake.DOWN]}\n'
         direction = {0: 'right', 1: 'left', 2: 'up', 3: 'down'}
         data += f'direction={direction[int(np.argmax(self.X[self.head_direction_idx:self.head_direction_idx + 4]))]}, '
-        data += f'tail direction={direction[int(np.argmax(self.X[self.tail_direction_idx:self.tail_direction_idx + 4]))]}\n '
+        data += f'tail direction=' \
+                f'{direction[int(np.argmax(self.X[self.tail_direction_idx:self.tail_direction_idx + 4]))]}\n '
         data += f'distance to apple x={self.X[self.apple_distance_x]}, '
         data += f'distance to apple y={self.X[self.apple_distance_y]}\n'
         data += f'length={self.X[self.length_idx]}\n'
@@ -105,11 +108,10 @@ class Data:
 
 class Player(NN):
 
-    def __init__(self, W: np.ndarray, snake: Snake, data: Data, mode: int) -> None:
+    def __init__(self, W: np.ndarray, snake_: Snake, data: Data) -> None:
         super().__init__(W)
-        self.mode = mode
-        self.score, self.steps = 0, 0
-        self.snake: Snake = snake
+        self.steps = 0
+        self.snake: Snake = snake_
         self.data = data
 
     def play(self):
@@ -118,14 +120,14 @@ class Player(NN):
 
         while not game_over:
             game_over, _ = self.snake.play_step(direction)
-            self.data.setX(State(self.snake.snake, self.snake.food, self.snake.direction, self.snake.score + 3, False))
+            self.data.setX(State(self.snake.snake, self.snake.food, self.snake.direction, self.snake.score + 3))
             direction = self.predict(self.data.X.reshape((1, -1)))
             self.steps += 1
 
 
 class Agent:
 
-    def __init__(self, gen_sizes: list, gui=True) -> None:
+    def __init__(self, gen_sizes: list, gui: bool = True) -> None:
         super().__init__()
         # init sizes
         self.layers = setting['layers']
@@ -135,13 +137,12 @@ class Agent:
         self.snake = Snake(gui=gui)
         self.data = Data(self.mode, self.snake.w, self.snake.h)
         # init generation
-        self.generation = [Player(NN.init_W(self.layers), self.snake, self.data, self.mode) for _ in
+        self.generation = [Player(NN.init_W(self.layers), self.snake, self.data) for _ in
                            range(gen_sizes[0])]
         self.fitness = {}
 
     def train(self):
         for i, size in enumerate(self.gen_sizes[:-1]):
-            # print data
             print(f'---------------  generation {i}  -------------------')
             for player in self.generation:
                 player.play()
@@ -160,10 +161,9 @@ class Agent:
     def crossover(self, i):
         x_len = min(self.gen_sizes[i] // 3, self.gen_sizes[i + 1] // 3)
         prev_generation = sorted(self.generation, key=lambda player: self.fitness[player], reverse=True)[:x_len]
-        self.generation = [Player(player.W, self.snake, self.data, self.mode) for player in prev_generation]
+        self.generation = [Player(player.W, self.snake, self.data) for player in prev_generation]
         # -------
         tmp = []
-        # tmp1 = []
         for p in prev_generation:
             tmp.append(self.fitness[p])
         print(f'mean={np.mean(tmp)}, max={tmp[0]}')
@@ -176,15 +176,15 @@ class Agent:
             W = []
             for w1, w2 in zip(parent1.W, parent2.W):
                 # generate indexes
-                id = np.array(np.meshgrid(np.arange(w1.shape[0]), np.arange(w1.shape[1]))).T.reshape((-1, 2))
-                # np.random.shuffle(id)
-                idx, idy, x = id[:, 0], id[:, 1], id.shape[0] // 2
+                id_ = np.array(np.meshgrid(np.arange(w1.shape[0]), np.arange(w1.shape[1]))).T.reshape((-1, 2))
+                # np.random.shuffle(id_)
+                idx, idy, x = id_[:, 0], id_[:, 1], id_.shape[0] // 2
                 # copy to new DNA
                 w_ = np.empty(w1.shape)
                 w_[idx[:x], idy[:x]] = w1[idx[:x], idy[:x]]
                 w_[idx[x:], idy[x:]] = w2[idx[x:], idy[x:]]
                 W.append(w_)
-            self.generation.append(Player(np.array(W, dtype=np.object), self.snake, self.data, self.mode))
+            self.generation.append(Player(np.array(W, dtype=np.object), self.snake, self.data))
 
     def mutation(self, i):
         x = self.gen_sizes[i + 1] // 3
@@ -196,24 +196,10 @@ class Agent:
             self.generation[i].W[k][x, y] += random.random()
 
     def save(self, file_name):
+        """save the weights of the last generation to file"""
         np.save(file_name, np.array([player.W for player in self.generation], dtype=np.object), allow_pickle=True)
 
     def load(self, file_name):
+        """load the last generation from a file"""
         weights = np.load(file_name, allow_pickle=True)
-        self.generation = [Player(W, self.snake, self.data, self.mode) for W in weights]
-
-
-if __name__ == '__main__':
-    pass
-    # layers = setting['layers']
-    # agent = Agent([20, 20, 20], layers)
-    # agent.train()
-
-    # p = Player(NN.init_W(setting['layers']), 4)
-    # print(p.data[2])
-
-    # d = Data(4)
-    # d[0] = 3
-    # print(d[0])
-    # for x in d:
-    #     print(x)
+        self.generation = [Player(W, self.snake, self.data) for W in weights]
