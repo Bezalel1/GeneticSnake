@@ -6,7 +6,7 @@ import snake
 from setting import setting
 from neural_network import NN
 from snake import Snake, Point
-import types
+
 
 class State(NamedTuple):
     snake_body: list[Point]
