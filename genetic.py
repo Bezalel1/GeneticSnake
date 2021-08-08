@@ -5,15 +5,15 @@ from typing import NamedTuple
 # import time
 import random
 # internal imports
-import snake_
+import snake
 from setting import setting
 from neural_network import NN
-from snake_ import Snake, Point
+from snake import Snake, Point
 
 
 class State(NamedTuple):
     snake_body: list[Point]
-    apple_location: snake_.Point
+    apple_location: snake.Point
     head_direction: int
     length: int
     game_over: bool
@@ -52,18 +52,18 @@ class Data:
 
         # distance to body
         self.X[self.body_distance_idx:self.body_distance_idx + 4] = 0  # np.inf
-        for x_ in range(x + snake_.block_size, self.w, snake_.block_size):  # RIGHT
+        for x_ in range(x + snake.block_size, self.w, snake.block_size):  # RIGHT
             if Point(x_, y) in state.snake_body:
-                self.X[self.body_distance_idx + snake_.RIGHT] = x_ - x
-        for x_ in range(0, x, snake_.block_size):  # LEFT
+                self.X[self.body_distance_idx + snake.RIGHT] = x_ - x
+        for x_ in range(0, x, snake.block_size):  # LEFT
             if Point(x_, y) in state.snake_body:
-                self.X[self.body_distance_idx + snake_.LEFT] = x - x_
-        for y_ in range(0, y, snake_.block_size):  # UP
+                self.X[self.body_distance_idx + snake.LEFT] = x - x_
+        for y_ in range(0, y, snake.block_size):  # UP
             if Point(x, y_) in state.snake_body:
-                self.X[self.body_distance_idx + snake_.UP] = y_ - y
-        for y_ in range(y + snake_.block_size, self.h, snake_.block_size):  # DOWN
+                self.X[self.body_distance_idx + snake.UP] = y_ - y
+        for y_ in range(y + snake.block_size, self.h, snake.block_size):  # DOWN
             if Point(x, y_) in state.snake_body:
-                self.X[self.body_distance_idx + snake_.DOWN] = y_ - y
+                self.X[self.body_distance_idx + snake.DOWN] = y_ - y
 
         # head direction
         self.X[self.head_direction_idx + state.head_direction] = 1
@@ -71,13 +71,13 @@ class Data:
         # tail direction
         tail_direction = None
         if state.snake_body[-1].x < state.snake_body[-2].x:
-            tail_direction = snake_.RIGHT
+            tail_direction = snake.RIGHT
         elif state.snake_body[-1].x > state.snake_body[-2].x:
-            tail_direction = snake_.LEFT
+            tail_direction = snake.LEFT
         elif state.snake_body[-1].y > state.snake_body[-2].y:
-            tail_direction = snake_.UP
+            tail_direction = snake.UP
         elif state.snake_body[-1].y < state.snake_body[-2].y:
-            tail_direction = snake_.DOWN
+            tail_direction = snake.DOWN
         self.X[self.tail_direction_idx + tail_direction] = 1
 
         # distance to apple
@@ -89,11 +89,11 @@ class Data:
 
     def __str__(self) -> str:
         data = '--- data ---\n'
-        data += f'distance to wall: right={self[snake_.RIGHT]}, '
-        data += f'left={self[snake_.LEFT]}, up={self[snake_.UP]}, down={self[snake_.DOWN]}\n'
+        data += f'distance to wall: right={self[snake.RIGHT]}, '
+        data += f'left={self[snake.LEFT]}, up={self[snake.UP]}, down={self[snake.DOWN]}\n'
         i = self.body_distance_idx
-        data += f'distance to body: right={self[i + snake_.RIGHT]},'
-        data += f' left={self[i + snake_.LEFT]}, up={self[i + snake_.UP]}, down={self[i + snake_.DOWN]}\n'
+        data += f'distance to body: right={self[i + snake.RIGHT]},'
+        data += f' left={self[i + snake.LEFT]}, up={self[i + snake.UP]}, down={self[i + snake.DOWN]}\n'
         direction = {0: 'right', 1: 'left', 2: 'up', 3: 'down'}
         data += f'direction={direction[int(np.argmax(self.X[self.head_direction_idx:self.head_direction_idx + 4]))]}, '
         data += f'tail direction={direction[int(np.argmax(self.X[self.tail_direction_idx:self.tail_direction_idx + 4]))]}\n '
