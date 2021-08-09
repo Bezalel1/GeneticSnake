@@ -86,10 +86,8 @@ class Snake:
         self.snake.insert(0, self.head)
 
         # 3. check if game over
-        game_over = False
         if self._is_collision():
-            game_over = True
-            return game_over, self.score
+            return True, self.score  # return game_over as True
 
         # 4. place new food or just move
         if self.head == self.food:
@@ -101,9 +99,9 @@ class Snake:
         # 5. update ui and clock
         if self.gui:
             self._update_ui()
-        self.clock.tick(speed)
+            self.clock.tick(speed)
         # 6. return game over and score
-        return game_over, self.score
+        return False, self.score  # return game_over as False
 
     def _is_collision(self):
         return self.head.x > self.w - block_size or self.head.x < 0 or self.head.y > self.h - block_size or \

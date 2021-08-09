@@ -3,6 +3,7 @@ from typing import NamedTuple
 import random
 import pickle
 # internal imports
+import neural_network
 import snake
 from setting import setting
 from neural_network import NN
@@ -110,15 +111,15 @@ class Data:
 class Player(NN):
 
     def __init__(self, W: np.ndarray, snake_: Snake, data: Data) -> None:
-        super().__init__(W)
+        super().__init__(W, activation=neural_network.sigmoid)
         self.steps = 0
         self.snake: Snake = snake_
         self.data = data
 
-    def play(self) -> bool:
+    def play(self):
         game_over, direction = False, random.randint(0, 4)  # snake.RIGHT
         self.snake.restart(direction)
-        score_, steps = 0, 0
+        # score_, steps = 0, 0
 
         while not game_over:
             game_over, score = self.snake.play_step(direction)
@@ -126,15 +127,15 @@ class Player(NN):
             direction = self.predict(self.data.X.reshape((1, -1)))
             self.steps += 1
 
-            # if snake stack in endless loop
-            steps += 1
-            if score != score_:
-                score_, steps = score, 0
-            elif steps >= score ** 2 + 10000:
-                print('steps large=', steps)
-                return True
-
-        return False
+        #     # if snake stack in endless loop
+        #     steps += 1
+        #     if score != score_:
+        #         score_, steps = score, 0
+        #     elif steps >= score ** 2 + 10000:
+        #         print('steps large=', steps)
+        #         return True
+        #
+        # return False
 
 
 class Agent:
@@ -183,18 +184,23 @@ class Agent:
 
     def evaluation(self, player: Player, stack_in_loop: bool) -> float:
         steps, apple = player.steps, self.snake.score
+        # 1.
         # fitness = steps + 2 ** apple + 500 * apple ** 2.1 - 0.25 * steps ** 1.3 * apple ** 1.2
+        # 2.
         # fitness = -steps + 2 ** apple + apple ** 2 * 500 + steps * apple * 100
-        # if stack_in_loop:
-        #     fitness = 0
-        # print(steps, fitness, stack_in_loop)
+        # 3.
         # fitness = apple / steps
+        # 4.
         # fitness = steps
         # if not stack_in_loop:
         #     fitness += apple ** 4 * steps
-        return apple
-        # return - player.steps / max(player.snake.score ** 3, 1)
-        # return player.steps  # + player.snake.score ** 3
+        # 5.
+        # if stack_in_loop:
+        #     fitness = 0
+        # 6.
+        fitness = steps + (apple + 1) ** 4 - steps / (apple + 1)
+        fitness = max(0, fitness)
+        return fitness
 
     def selection(self, next_gen_idx: int) -> np.ndarray:
         fitness = self.fitness.copy() + np.abs(np.min(self.fitness))

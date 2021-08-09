@@ -10,7 +10,7 @@ k = 1000
 # agent = Agent([k for _ in range(1)], gui=False)
 # agent.train(load=False, save=True)
 print(f'************************   iteration {i}   ************************')
-agent = Agent([k for _ in range(50)], gui=False)
+agent = Agent([k for _ in range(10)], gui=False)
 agent.train(load=True, save=True)
 
 plt.style.use('seaborn')

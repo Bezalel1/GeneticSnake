@@ -1,8 +1,9 @@
 import numpy as np
 from typing import Callable, NewType
+from scipy.special import expit
 
 Activation = NewType('Activation', Callable[[np.ndarray], np.ndarray])
-sigmoid = Activation(lambda X: 1.0 / (1.0 + np.exp(-X)))
+sigmoid = Activation(lambda X: 1. / (1. + expit(-X)))
 linear = Activation(lambda X: X)
 relu = Activation(lambda X: np.maximum(0, X))
 leaky_relu = Activation(lambda X: np.where(X > 0, X, X * 0.01))
