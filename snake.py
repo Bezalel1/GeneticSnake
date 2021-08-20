@@ -7,6 +7,7 @@ from setting import setting
 pygame.init()
 font = pygame.font.Font('arial.ttf', 25)
 
+# RIGHT, UP, DOWN, LEFT = 0, 1, 2, 3
 RIGHT, LEFT, UP, DOWN = 0, 1, 2, 3
 
 Point = namedtuple('Point', 'x, y')
@@ -25,8 +26,8 @@ speed = setting['speed']
 class Snake:
 
     def __init__(self, direction=RIGHT, gui=True):
-        self.w = setting['width']
-        self.h = setting['height']
+        self.w = setting['width'] * block_size
+        self.h = setting['height'] * block_size
         # init display
         self.gui = gui
         if gui:
@@ -66,20 +67,42 @@ class Snake:
         if self.food in self.snake:
             self._place_food()
 
-    def play_step(self, direction):
+    def play_step(self, direction, simple_mode=False):
         # 1. set direction
-        if direction == RIGHT:
-            if self.direction != LEFT:
-                self.direction = direction
-        elif direction == LEFT:
-            if self.direction != RIGHT:
-                self.direction = direction
-        elif direction == UP:
-            if self.direction != DOWN:
-                self.direction = direction
-        elif direction == DOWN:
-            if self.direction != UP:
-                self.direction = direction
+        if simple_mode:
+            if direction == RIGHT:
+                if self.direction != LEFT:
+                    self.direction = direction
+            elif direction == LEFT:
+                if self.direction != RIGHT:
+                    self.direction = direction
+            elif direction == UP:
+                if self.direction != DOWN:
+                    self.direction = direction
+            elif direction == DOWN:
+                if self.direction != UP:
+                    self.direction = direction
+        else:
+            if self.direction == RIGHT:
+                if direction == 1:
+                    self.direction = UP
+                elif direction == 2:
+                    self.direction = DOWN
+            elif self.direction == LEFT:
+                if direction == 1:
+                    self.direction = DOWN
+                elif direction == 2:
+                    self.direction = UP
+            elif self.direction == UP:
+                if direction == 1:
+                    self.direction = LEFT
+                elif direction == 2:
+                    self.direction = RIGHT
+            elif self.direction == DOWN:
+                if direction == 1:
+                    self.direction = RIGHT
+                elif direction == 2:
+                    self.direction = LEFT
 
         # 2. move
         self._move()  # update the head

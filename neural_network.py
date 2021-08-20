@@ -1,9 +1,8 @@
 import numpy as np
 from typing import Callable, NewType
-from scipy.special import expit
 
 Activation = NewType('Activation', Callable[[np.ndarray], np.ndarray])
-sigmoid = Activation(lambda X: 1. / (1. + expit(-X)))
+sigmoid = Activation(lambda X: 1. / (1. + np.exp(-X)))
 linear = Activation(lambda X: X)
 relu = Activation(lambda X: np.maximum(0, X))
 leaky_relu = Activation(lambda X: np.where(X > 0, X, X * 0.01))
@@ -16,9 +15,6 @@ class NN:
     """
 
     def __init__(self, W, activation: Activation = sigmoid, alpha=1e-7, landa=0., file_name='W') -> None:
-        """
-        # * 2 * eps - eps
-        """
         super().__init__()
         self.W = W
         self.alpha, self.landa = alpha, landa
@@ -27,6 +23,7 @@ class NN:
 
     def feedforward(self, X: np.ndarray) -> list:
         H = [X.T]
+
         for w in self.W:
             H[-1] = np.insert(H[-1], 0, np.ones((H[-1].shape[1]), dtype=H[-1].dtype), axis=0)
             H.append(self.activation(w @ H[-1]))
@@ -82,5 +79,5 @@ class NN:
 
     @staticmethod
     def init_W(layers):
-        return np.array([np.random.rand(l1, l0 + 1) * 0.24 - 0.12 for l0, l1 in zip(layers[:-1], layers[1:])],
+        return np.array([np.random.rand(l1, l0 + 1) * 2 - 1 for l0, l1 in zip(layers[:-1], layers[1:])],
                         dtype=np.object)

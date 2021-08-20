@@ -1,141 +1,72 @@
 import numpy as np
-from typing import NamedTuple
 import random
 import pickle
+import time
 # internal imports
 import neural_network
 import snake
 from setting import setting
 from neural_network import NN
 from snake import Snake, Point
-
-
-class State(NamedTuple):
-    snake_body: list[Point]
-    apple_location: snake.Point
-    head_direction: int
-    length: int
-
-
-class Data:
-
-    def __init__(self, mode, w, h) -> None:
-        super().__init__()
-        self.w, self.h = w, h
-        self.wall_distance_idx = 0  # 0-3, r,l,u,d
-        self.body_distance_idx = mode  # 4-7, r,l,u,d
-        self.head_direction_idx = mode * 2  # 8-11
-        self.tail_direction_idx = self.head_direction_idx + 4  # 12-15
-        self.apple_distance_x = self.tail_direction_idx + 4  # 16
-        self.apple_distance_y = self.apple_distance_x + 1  # 17
-        self.length_idx = self.apple_distance_y + 1  # 18
-        self.X = np.zeros((self.length_idx + 1,))
-
-    def __getitem__(self, key):
-        return self.X[key]
-
-    def __setitem__(self, key, value):
-        self.X[key] = value
-
-    def __len__(self):
-        return len(self.X)
-
-    def setX(self, state: State) -> None:
-        """
-        prepare vector X with the current parameters [wall,body,apple,length,...]
-            for the neural network prediction
-        """
-        x, y = int(state.snake_body[0].x), int(state.snake_body[0].y)
-
-        # distance to wall
-        self.X[self.wall_distance_idx:self.wall_distance_idx + 4] = self.w - x, x, y, self.h - y
-
-        # distance to body
-        self.X[self.body_distance_idx:self.body_distance_idx + 4] = 0  # np.inf
-        for x_ in range(x + snake.block_size, self.w, snake.block_size):  # RIGHT
-            if Point(x_, y) in state.snake_body:
-                self.X[self.body_distance_idx + snake.RIGHT] = x_ - x
-        for x_ in range(0, x, snake.block_size):  # LEFT
-            if Point(x_, y) in state.snake_body:
-                self.X[self.body_distance_idx + snake.LEFT] = x - x_
-        for y_ in range(0, y, snake.block_size):  # UP
-            if Point(x, y_) in state.snake_body:
-                self.X[self.body_distance_idx + snake.UP] = y_ - y
-        for y_ in range(y + snake.block_size, self.h, snake.block_size):  # DOWN
-            if Point(x, y_) in state.snake_body:
-                self.X[self.body_distance_idx + snake.DOWN] = y_ - y
-
-        # head direction
-        self.X[self.head_direction_idx + state.head_direction] = 1
-
-        # tail direction
-        tail_direction = None
-        if state.snake_body[-1].x < state.snake_body[-2].x:
-            tail_direction = snake.RIGHT
-        elif state.snake_body[-1].x > state.snake_body[-2].x:
-            tail_direction = snake.LEFT
-        elif state.snake_body[-1].y > state.snake_body[-2].y:
-            tail_direction = snake.UP
-        elif state.snake_body[-1].y < state.snake_body[-2].y:
-            tail_direction = snake.DOWN
-        self.X[self.tail_direction_idx + tail_direction] = 1
-
-        # distance to apple
-        self.X[self.apple_distance_x] = state.apple_location.x - state.snake_body[0].x
-        self.X[self.apple_distance_y] = state.apple_location.y - state.snake_body[0].y
-
-        # length
-        self.X[self.length_idx] = state.length
-
-    def __str__(self) -> str:
-        """
-        print details of X for debugging
-        :return: X in string representation
-        """
-        data = '--- data ---\n'
-        data += f'distance to wall: right={self[snake.RIGHT]}, '
-        data += f'left={self[snake.LEFT]}, up={self[snake.UP]}, down={self[snake.DOWN]}\n'
-        i = self.body_distance_idx
-        data += f'distance to body: right={self[i + snake.RIGHT]},'
-        data += f' left={self[i + snake.LEFT]}, up={self[i + snake.UP]}, down={self[i + snake.DOWN]}\n'
-        direction = {0: 'right', 1: 'left', 2: 'up', 3: 'down'}
-        data += f'direction={direction[int(np.argmax(self.X[self.head_direction_idx:self.head_direction_idx + 4]))]}, '
-        data += f'tail direction=' \
-                f'{direction[int(np.argmax(self.X[self.tail_direction_idx:self.tail_direction_idx + 4]))]}\n '
-        data += f'distance to apple x={self.X[self.apple_distance_x]}, '
-        data += f'distance to apple y={self.X[self.apple_distance_y]}\n'
-        data += f'length={self.X[self.length_idx]}\n'
-        return data
+from helper import State, Data
 
 
 class Player(NN):
 
     def __init__(self, W: np.ndarray, snake_: Snake, data: Data) -> None:
-        super().__init__(W, activation=neural_network.sigmoid)
+        super().__init__(W, activation=neural_network.linear)
         self.steps = 0
         self.snake: Snake = snake_
         self.data = data
 
     def play(self):
-        game_over, direction = False, random.randint(0, 4)  # snake.RIGHT
+        game_over, direction = False, random.randint(0, 4)  # random.randint(0, 4)  # snake.RIGHT
         self.snake.restart(direction)
-        # score_, steps = 0, 0
+        score, steps, steps_all = 0, 0, 0
+
+        # model = tf.keras.models.Sequential()
+        # model.add(Dense(10, input_shape=(19,), activation='relu'))
+        # model.add(Dense(8, activation='relu'))
+        # model.add(Dense(4, activation='softmax'))
+        # model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        # print(self.data.X.shape)
+        # print('l', ())
 
         while not game_over:
-            game_over, score = self.snake.play_step(direction)
-            self.data.setX(State(self.snake.snake, self.snake.food, self.snake.direction, self.snake.score + 3))
-            direction = self.predict(self.data.X.reshape((1, -1)))
-            self.steps += 1
+            x0, y0 = self.snake.head.x, self.snake.head.y
+            x, y = self.snake.food.x, self.snake.food.y
+            game_over, _ = self.snake.play_step(direction, simple_mode=False)
+            x1, y1 = self.snake.head.x, self.snake.head.y
 
-        #     # if snake stack in endless loop
-        #     steps += 1
-        #     if score != score_:
-        #         score_, steps = score, 0
-        #     elif steps >= score ** 2 + 10000:
-        #         print('steps large=', steps)
-        #         return True
-        #
-        # return False
+            if abs(x1 - x) < abs(x0 - x) or abs(y1 - y) < abs(y0 - y):
+                self.steps += 1
+                # print('not eat:', [abs(x1 - x), abs(x0 - x)], [abs(y1 - y), abs(y0 - y)])
+                # print('not eat:', [(x0, y0), (x1, y1), (x, y)])
+            # elif score_ < self.snake.score:
+            #     self.steps += 11
+            #     score_ = self.snake.score
+            # print('eat')
+            else:
+                # print('=not eat:', [abs(x1 - x), abs(x0 - x)], [abs(y1 - y), abs(y0 - y)])
+                self.steps -= 1.5
+
+            self.data.setX2(State(self.snake.snake, self.snake.food, self.snake.direction, self.snake.score + 3))
+            # direction = int(np.argmax(model.predict(self.data.X.reshape((1, -1)))))
+            direction = int(self.predict(self.data.X.reshape((1, -1))))
+
+            # if snake stack in endless loop
+            steps += 1
+            steps_all += 1
+            if score != self.snake.score:
+                score, steps = self.snake.score, 0
+            elif steps >= score ** 2 + 200:
+
+                # print(
+                #     f'steps={steps} apple={score} fitness={score * 10 + self.steps} self.steps={self.steps} steps_all='
+                #     f'{steps_all} mean steps={steps_all / score if score != 0 else 1}')
+                return True
+
+        return False
 
 
 class Agent:
@@ -150,81 +81,101 @@ class Agent:
         self.snake = Snake(gui=gui)
         self.data = Data(self.mode, self.snake.w, self.snake.h)
         # init generation
+        # self.generation = None
         self.generation: np.ndarray = np.array(
             [Player(NN.init_W(self.layers), self.snake, self.data) for _ in range(gen_sizes[0])])
         self.fitness: np.ndarray = np.empty((gen_sizes[0],), dtype=np.float64)
 
         self.history = []
+        self.mean = 0
+        self.best_player, self.best_fitness = self.generation[0], 0
 
-    def train(self, load=False, save=False, file_name='generation.npy'):
+    def train(self, load=False, save=False):
         if load:
-            self.load(file_name)
-            try:
-                with open('history', 'rb') as f:
-                    self.history = pickle.load(f)
-            except Exception as e:
-                print(e)
+            self.load()
 
         for curr_gen_idx, size in enumerate(self.gen_sizes[:-1]):
             print(f'---------------  generation {curr_gen_idx}  -------------------')
             for j, player in enumerate(self.generation):
                 stack_in_loop = player.play()
+                # print(type(self.evaluation(player,stack_in_loop)))
                 self.fitness[j] = self.evaluation(player, stack_in_loop)
             self.crossover(curr_gen_idx)
             self.mutation(curr_gen_idx)
+            # time.sleep(3)
 
         if save:
-            self.save(file_name)
-            try:
-                with open('history', 'wb') as f:
-                    pickle.dump(self.history, f)
-
-            except Exception as e:
-                print(e)
+            self.save()
 
     def evaluation(self, player: Player, stack_in_loop: bool) -> float:
         steps, apple = player.steps, self.snake.score
-        # 1.
-        # fitness = steps + 2 ** apple + 500 * apple ** 2.1 - 0.25 * steps ** 1.3 * apple ** 1.2
-        # 2.
-        # fitness = -steps + 2 ** apple + apple ** 2 * 500 + steps * apple * 100
-        # 3.
-        # fitness = apple / steps
-        # 4.
-        # fitness = steps
-        # if not stack_in_loop:
-        #     fitness += apple ** 4 * steps
-        # 5.
+        # fitness = steps + (2 ** apple) + 500 * (apple ** 2.1) - 0.25 * (steps ** 1.3) * (apple ** 1.2)
+        # fitness = steps * apple + (2 ** apple) + 2000 * ((apple + 1) ** 4) + (apple + 1) ** 4 / steps
+        # fitness = steps + (2 ** apple) + 500 * (apple ** 2.1) - 0.25 * (steps ** 1.3) * (apple ** 1.2)
+        # fitness = apple * steps
         # if stack_in_loop:
         #     fitness = 0
-        # 6.
-        fitness = steps + (apple + 1) ** 4 - steps / (apple + 1)
-        fitness = max(0, fitness)
+        # print(f'1000=>score={apple}, steps={steps}, fitness={fitness}')
+        fitness = steps + apple * 10
+
+        if apple >= 43:
+            print(f'apple=>score={apple}, steps={steps}, fitness={fitness}')
+
+        if fitness > self.best_fitness:
+            self.best_fitness = fitness
+            self.best_player = player
+
+        # if steps >= 700:
+        #     print(f'1000=>score={apple}, steps={steps}, fitness={fitness}')
         return fitness
 
     def selection(self, next_gen_idx: int) -> np.ndarray:
-        fitness = self.fitness.copy() + np.abs(np.min(self.fitness))
-        sum_fitness = float(np.sum(fitness))
-        probability = fitness / sum_fitness if sum_fitness != 0 else 1
-        idx = np.arange(self.gen_sizes[next_gen_idx - 1])
-        return np.random.choice(idx, self.gen_sizes[next_gen_idx], p=probability)
+        # best_dna_idx = np.arange(self.fitness.shape[0])
+
+        # best_dna_idx = np.argwhere(self.fitness >= 0).reshape((-1,))
+        best_dna_idx = np.argwhere(self.fitness >= 80).reshape((-1,))
+        # print(self.fitness[best_dna_idx])
+        print(f'best len={best_dna_idx.shape}')
+        # best_dna_idx = np.argsort(self.fitness)[-self.fitness.shape[0]:]
+        fitness = self.fitness[best_dna_idx]
+        # fitness += np.abs(np.min(fitness))
+        probability = fitness / float(np.sum(fitness))
+        if np.inf in probability:
+            print(probability)
+            print(fitness)
+        return np.random.choice(best_dna_idx, self.gen_sizes[next_gen_idx], p=probability)
 
     def crossover(self, curr_gen_idx):
+        chosen_dna = self.selection(curr_gen_idx + 1)
+
         # -------
         print(f'mean={np.mean(self.fitness)}, max={np.max(self.fitness)}')
         x = self.gen_sizes[curr_gen_idx] // 3
-        print(f'{np.mean(self.fitness[:x])}, {np.mean(self.fitness[x:2 * x])}, {np.mean(self.fitness[2 * x:])}')
-        self.history.append([np.mean(self.fitness), np.max(self.fitness)])
+        print('chosen_dna mean:', np.mean(self.fitness[chosen_dna]))
+        print(f'mean: {np.mean(self.fitness[:x // 2])}, {np.mean(self.fitness[x // 2:x])}, '
+              f'{np.mean(self.fitness[x:2 * x])}, {np.mean(self.fitness[2 * x:])}')
+        print(f'max: {np.max(self.fitness[:x // 2])}, {np.max(self.fitness[x // 2:x])},'
+              f' {np.max(self.fitness[x:2 * x])}, {np.max(self.fitness[2 * x:])}')
+        print(f'best: {np.argwhere((chosen_dna < x // 2)).shape[0]}, '
+              f'{np.argwhere((chosen_dna >= x // 2) & (chosen_dna < x)).shape[0]}, '
+              f'{np.argwhere((chosen_dna >= x) & (chosen_dna <= 2 * x)).shape[0]}, '
+              f'{np.argwhere(chosen_dna > 2 * x).shape[0]}')
+        self.history.append([np.mean(self.fitness), np.max(self.fitness), np.mean(self.fitness[:x // 2]),
+                             np.mean(self.fitness[x // 2:x]), np.mean(self.fitness[x:2 * x]),
+                             np.mean(self.fitness[2 * x:])])
         # -------
 
         x_len = self.gen_sizes[curr_gen_idx + 1] // 3
+        # chosen_dna = self.selection(curr_gen_idx + 1)
         chosen_dna = self.generation[self.selection(curr_gen_idx + 1)]
         next_generation = [Player(player.W, self.snake, self.data) for player in chosen_dna[:x_len]]
         self.fitness = np.empty((self.gen_sizes[curr_gen_idx + 1]), dtype=np.float64)
 
-        for _ in range(x_len, self.gen_sizes[curr_gen_idx + 1]):
+        for i in range(x_len, self.gen_sizes[curr_gen_idx + 1]):
             parent1_idx, parent2_idx = random.randint(0, x_len - 1), random.randint(0, x_len - 1)
             parent1, parent2 = chosen_dna[parent1_idx], chosen_dna[parent2_idx]
+            # size = self.gen_sizes[curr_gen_idx + 1]
+            # parent1, parent2 = chosen_dna[i % size], chosen_dna[i % (size + 1)]
             W = []
             for w1, w2 in zip(parent1.W, parent2.W):
                 # generate indexes
@@ -240,22 +191,62 @@ class Agent:
         self.generation = np.array(next_generation)
 
     def mutation(self, i):
-        x = self.gen_sizes[i + 1] // 3
-        shapes = np.array([np.array(w.shape) for w in self.generation[0].W])
 
-        for i in range(2 * x, 3 * x):
-            k = random.randint(0, len(shapes) - 1)
-            size = (shapes[k][0] * shapes[k][1]) // 2
-            x = np.random.randint(0, shapes[k][0], size=size)
-            y = np.random.randint(0, shapes[k][1], size=size)
-            self.generation[i].W[k][x, y] += random.random()
+        def _mutation(start, end, eps=1.):
+            shapes = np.array([np.array(w.shape) for w in self.generation[0].W])
 
-    def save(self, file_name):
+            for j in range(start, end):
+                k = random.randint(0, len(shapes) - 1)
+                size = (shapes[k][0] * shapes[k][1]) // 5
+                x = np.random.randint(0, shapes[k][0], size=size)
+                y = np.random.randint(0, shapes[k][1], size=size)
+                self.generation[j].W[k][x, y] += np.random.uniform(low=-1, high=1, size=(size,)) * eps
+
+        x_idx = self.gen_sizes[i + 1] // 3
+
+        _mutation(x_idx // 2, x_idx, 0.01)
+        _mutation(2 * x_idx, 3 * x_idx, 0.01)
+
+    def save(self):
         """save the weights of the last generation to file"""
         save_object = np.array([player.W for player in self.generation], dtype=np.object)
-        np.save(file_name, save_object, allow_pickle=True)
+        file_name = '|'.join(str(x) for x in setting['layers'])
+        np.save(file_name + '.npy', save_object, allow_pickle=True)
 
-    def load(self, file_name):
+        try:
+            with open('history', 'wb') as f:
+                pickle.dump(self.history, f)
+        except Exception as e:
+            print(e)
+        try:
+            with open('best_snake', 'wb') as f:
+                pickle.dump((self.best_player.W, self.best_fitness), f)
+        except Exception as e:
+            print('save:', e)
+
+    def load(self):
         """load the last generation from a file"""
-        load_object = np.load(file_name, allow_pickle=True)[:self.gen_sizes[0]]
+        file_name = '|'.join(str(x) for x in setting['layers'])
+        load_object = np.load(file_name + '.npy', allow_pickle=True)[:self.gen_sizes[0]]
         self.generation = np.array([Player(W, self.snake, self.data) for W in load_object])
+
+        try:
+            with open('history', 'rb') as f:
+                self.history = pickle.load(f)
+        except Exception as e:
+            print(e)
+
+        try:
+            with open('best_snake', 'rb') as f:
+                W, self.best_fitness = pickle.load(f)
+                self.best_player = Player(W, self.snake, self.data)
+        except Exception as e:
+            print('load:', e)
+
+    def demonstration(self):
+        try:
+            with open('best_snake', 'rb') as f:
+                self.best_player = Player(pickle.load(f)[0], self.snake, self.data)
+                self.best_player.play()
+        except Exception as e:
+            print(e)
