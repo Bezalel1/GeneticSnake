@@ -1,4 +1,4 @@
-setting = {'width': 8, 'height': 8, 'block_size': 20, 'speed': 30, 'layers': [67, 100, 67, 3],
+setting = {'width': 8, 'height': 8, 'block_size': 20, 'speed': 20, 'layers': [67, 100, 67, 3],
            'vision mode': 4}
 # set0
 # [6, 15, 8, 3]=>max() binary

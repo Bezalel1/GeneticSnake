@@ -4,14 +4,6 @@ import snake
 from snake import Point
 
 
-# tmp
-# import tensorflow as tf
-# from tensorflow.keras.models import Sequential
-# from tensorflow.keras.layers import Dense, Activation
-# from tensorflow.keras.optimizers import Adam
-# from tensorflow.keras.callbacks import EarlyStopping
-
-
 class State(NamedTuple):
     """
     represent the snake is state

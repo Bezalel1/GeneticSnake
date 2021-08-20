@@ -8,7 +8,7 @@ import numpy as np
 # agent.train(load=True, save=False)
 
 agent = Agent([2000 for _ in range(5)], gui=False)  # 1000:20
-agent.train(load=False, save=True)
+agent.train(load=True, save=True)
 
 data = np.array(agent.history)
 plt.style.use('seaborn')
