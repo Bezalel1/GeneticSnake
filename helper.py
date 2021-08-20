@@ -13,6 +13,9 @@ from snake import Point
 
 
 class State(NamedTuple):
+    """
+    represent the snake is state
+    """
     snake_body: list[Point]
     apple_location: snake.Point
     head_direction: int
@@ -370,7 +373,6 @@ class Data:
             X[int(p.x // w), int(p.y // h)] = 1
         X = X.reshape((-1,))
         self.X = np.hstack((X, [x_apple / w, y_apple / h, state.length / ((h * w) / block ** 2)]))
-        # self.X[-1] = state.length / ((self.h * self.w) / snake.block_size ** 2)
 
     def setX5(self, state: State):
         self.X = np.zeros((12,))

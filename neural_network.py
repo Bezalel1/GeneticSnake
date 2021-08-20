@@ -79,5 +79,6 @@ class NN:
 
     @staticmethod
     def init_W(layers):
-        return np.array([np.random.rand(l1, l0 + 1) * 2 - 1 for l0, l1 in zip(layers[:-1], layers[1:])],
-                        dtype=np.object)
+        return np.array(
+            [np.random.uniform(low=-1, high=1, size=(l1, l0 + 1)) for l0, l1 in zip(layers[:-1], layers[1:])],
+            dtype=np.object)

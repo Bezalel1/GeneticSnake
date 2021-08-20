@@ -7,8 +7,8 @@ import numpy as np
 # agent = Agent([500 for _ in range(3)], gui=True)  # 1000:20
 # agent.train(load=True, save=False)
 
-agent = Agent([500 for _ in range(50)], gui=False)  # 1000:20
-agent.train(load=True, save=True)
+agent = Agent([2000 for _ in range(5)], gui=False)  # 1000:20
+agent.train(load=False, save=True)
 
 data = np.array(agent.history)
 plt.style.use('seaborn')
