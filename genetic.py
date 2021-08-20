@@ -21,7 +21,7 @@ class Player(NN):
     def play(self) -> None:
         game_over, direction = False, random.randint(0, 4)  # random.randint(0, 4)  # snake.RIGHT
         self.snake.restart(direction)
-        score, steps = 0, 0
+        steps = 0
 
         while not game_over:
             x0, y0 = self.snake.head.x, self.snake.head.y
@@ -34,12 +34,12 @@ class Player(NN):
             else:
                 self.steps -= 1.5
 
-            self.data.setX4(State(self.snake.snake, self.snake.food, self.snake.direction, self.snake.score + 3))
+            self.data.setX7(State(self.snake.snake, self.snake.food, self.snake.direction, self.snake.score + 3))
             direction = int(self.predict(self.data.X.reshape((1, -1))))
 
             # check if snake stack in endless loop
             steps = 0 if eat else steps + 1
-            if steps >= score ** 2 + 200:
+            if steps >= self.snake.score ** 2 + 200:
                 return
 
 
@@ -81,7 +81,7 @@ class Agent:
                 player.play()
                 self.fitness[j] = self.evaluation(player)
             self.crossover(curr_gen_idx)
-            self.mutation(curr_gen_idx)
+            self.mutation(curr_gen_idx, eps=0.01)
             # time.sleep(3)
 
         if save:
@@ -95,7 +95,7 @@ class Agent:
         """
         fitness = player.steps + self.snake.score * 10
 
-        if self.snake.score >= 10:
+        if self.snake.score >= 35:
             print(f'apple=>score={self.snake.score}, steps={player.steps}, fitness={fitness}')
 
         if fitness > self.best_fitness:
@@ -114,13 +114,14 @@ class Agent:
             The number of occurrences of each index will be in probability according
             to its performance in the game.
         """
-        best_dna_idx = np.argwhere(self.fitness >= 0).reshape((-1,))
+        best_dna_idx = np.argwhere(self.fitness >= 50).reshape((-1,))
         if len(best_dna_idx):
             fitness = self.fitness[best_dna_idx]
         else:
             best_dna_idx = np.arange(self.fitness.shape[0])
             fitness = self.fitness[best_dna_idx] + np.abs(np.min(self.fitness[best_dna_idx]))
 
+        fitness *= fitness
         probability = fitness / float(np.sum(fitness))
         if np.inf in probability:
             print(probability)

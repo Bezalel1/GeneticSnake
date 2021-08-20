@@ -4,10 +4,9 @@ import numpy as np
 
 # agent = Agent([20 for _ in range(3)], gui=True)
 # agent.demonstration()
-# agent = Agent([500 for _ in range(3)], gui=True)  # 1000:20
 # agent.train(load=True, save=False)
 
-agent = Agent([2000 for _ in range(5)], gui=False)  # 1000:20
+agent = Agent([100 for _ in range(50)], gui=False)  # 1000:20
 agent.train(load=True, save=True)
 
 data = np.array(agent.history)

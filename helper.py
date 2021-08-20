@@ -458,6 +458,200 @@ class Data:
             # self.X[11] = Point(x - block, y + block) in state.snake_body or x == 0 or y + block == h
             # self.X[12] = Point(x - block * 2, y + block * 2) in state.snake_body or x - block <= 0 or y + 2 * block >= h
 
+    def setX6(self, state: State):
+        self.X = np.zeros((17,))
+        self.X[-1] = state.length / ((self.h * self.w) / snake.block_size ** 2)
+
+        x, y, block = state.snake_body[0].x, state.snake_body[0].y, snake.block_size
+        w, h = self.w, self.h
+        x_apple, y_apple = state.apple_location.x, state.apple_location.y
+
+        if state.head_direction == snake.RIGHT:
+            # 0,1=>Straight
+            self.X[0] = x + block == w or Point(x + block, y) in state.snake_body
+            self.X[1] = x + block * 2 >= w or Point(x + block * 2, y) in state.snake_body
+            self.X[2] = x + block * 3 >= w or Point(x + block * 3, y) in state.snake_body
+            # 2,3=>Left (up)
+            self.X[3] = y == 0 or Point(x, y - block) in state.snake_body
+            self.X[4] = y - block <= 0 or Point(x, y - block * 2) in state.snake_body
+            self.X[5] = y - block * 2 <= 0 or Point(x, y - block * 3) in state.snake_body
+            # 4,5=>Right (down)
+            self.X[6] = y + block == h or Point(x, y + block) in state.snake_body
+            self.X[7] = y + block * 2 >= h or Point(x, y + block * 2) in state.snake_body
+            self.X[8] = y + block * 3 >= h or Point(x, y + block * 3) in state.snake_body
+            # 6,7,8=>Apple
+            self.X[9], self.X[10], self.X[11] = x < x_apple, y > y_apple, y < y_apple
+            # 12,13,14,15=>Diag
+            self.X[12] = Point(x + block, y - block) in state.snake_body or x + block == w or y - block < 0
+            self.X[13] = Point(x + block * 2, y - block * 2) in state.snake_body \
+                         or x + block * 2 >= w or y - block * 2 < 0
+            self.X[14] = Point(x + block, y + block) in state.snake_body or x + block == w or y + block == h
+            self.X[15] = Point(x + block * 2, y + block * 2) in state.snake_body \
+                         or x + block * 2 >= w or y + block * 2 >= h
+            # self.X[16]=
+            # self.X[17]=
+        elif state.head_direction == snake.LEFT:
+            # 0,1=>Straight
+            self.X[0] = x == 0 or Point(x - block, y) in state.snake_body
+            self.X[1] = x - block <= 0 or Point(x - block * 2, y) in state.snake_body
+            self.X[2] = x - block * 2 <= 0 or Point(x - block * 3, y) in state.snake_body
+            # 2,3=>Left (down)
+            self.X[3] = y + block == h or Point(x, y + block) in state.snake_body
+            self.X[4] = y + block * 2 >= h or Point(x, y + block * 2) in state.snake_body
+            self.X[5] = y + block * 3 >= h or Point(x, y + block * 3) in state.snake_body
+            # 4,5=> Right (up)
+            self.X[6] = y == 0 or Point(x, y - block) in state.snake_body
+            self.X[7] = y - block <= 0 or Point(x, y - block * 2) in state.snake_body
+            self.X[8] = y - block * 2 <= 0 or Point(x, y - block * 3) in state.snake_body
+            # 6,7,8=>Apple
+            self.X[9], self.X[10], self.X[11] = x > x_apple, y < y_apple, y > y_apple
+            # 12,13,14,15=>Diag
+            self.X[12] = Point(x - block, y + block) in state.snake_body or x == 0 or y + block == h
+            self.X[13] = Point(x - block * 2, y + block * 2) in state.snake_body or x - block <= 0 or y + 2 * block >= h
+            self.X[14] = Point(x - block, y - block) in state.snake_body or x == 0 or y == 0
+            self.X[15] = Point(x - block * 2, y - block * 2) in state.snake_body or x - block <= 0 or y - block <= 0
+        elif state.head_direction == snake.UP:
+            # 0,1=>Straight
+            self.X[0] = y == 0 or Point(x, y - block) in state.snake_body
+            self.X[1] = y - block <= 0 or Point(x, y - block * 2) in state.snake_body
+            self.X[2] = y - block + 2 <= 0 or Point(x, y - block * 3) in state.snake_body
+            # 2,3=>Left (left)
+            self.X[3] = x == 0 or Point(x - block, y) in state.snake_body
+            self.X[4] = x - block <= 0 or Point(x - block * 2, y) in state.snake_body
+            self.X[5] = x - block * 2 <= 0 or Point(x - block * 3, y) in state.snake_body
+            # 4,5=> Right (right)
+            self.X[6] = x + block == w or Point(x + block, y) in state.snake_body
+            self.X[7] = x + block * 2 >= w or Point(x + block * 2, y) in state.snake_body
+            self.X[8] = x + block * 3 >= w or Point(x + block * 3, y) in state.snake_body
+            # 6,7,8=>Apple
+            self.X[9], self.X[10], self.X[11] = y > y_apple, x > x_apple, x < x_apple
+            # 12,13,14,15=>Diag
+            self.X[12] = Point(x - block, y - block) in state.snake_body or x == 0 or y == 0
+            self.X[13] = Point(x - block * 2, y - block * 2) in state.snake_body or x - block <= 0 or y - block <= 0
+            self.X[14] = Point(x + block, y - block) in state.snake_body or x + block == w or y == 0
+            self.X[15] = Point(x + block * 2, y - block * 2) in state.snake_body or x + 2 * block >= w or y - block <= 0
+        elif state.head_direction == snake.DOWN:
+            # 0,1=>Straight
+            self.X[0] = y + block == h or Point(x, y + block) in state.snake_body
+            self.X[1] = y + block * 2 >= h or Point(x, y + block * 2) in state.snake_body
+            self.X[2] = y + block * 3 >= h or Point(x, y + block * 3) in state.snake_body
+            # 2,3=>Left (right)
+            self.X[3] = x + block == h or Point(x + block, y) in state.snake_body
+            self.X[4] = x + block * 2 >= h or Point(x + block * 2, y) in state.snake_body
+            self.X[5] = x + block * 3 >= h or Point(x + block * 3, y) in state.snake_body
+            # 4,5=> Right (left)
+            self.X[6] = x == 0 or Point(x - block, y) in state.snake_body
+            self.X[7] = x - block <= 0 or Point(x - block * 2, y) in state.snake_body
+            self.X[8] = x - block * 3 <= 0 or Point(x - block * 3, y) in state.snake_body
+            # 6,7,8=>Apple
+            self.X[9], self.X[10], self.X[11] = y < y_apple, x < x_apple, x > x_apple
+            # 12,13,14,15=>Diag
+            self.X[12] = Point(x + block, y + block) in state.snake_body or x + block == w or y + block == h
+            self.X[13] = Point(x + block * 2,
+                               y + block * 2) in state.snake_body or x + 2 * block >= w or y + 2 * block >= h
+            self.X[14] = Point(x - block, y + block) in state.snake_body or x == 0 or y + block == h
+            self.X[15] = Point(x - block * 2, y + block * 2) in state.snake_body or x - block <= 0 or y + 2 * block >= h
+
+    def setX7(self, state: State):
+        self.X = np.zeros((17,))
+        self.X[-1] = state.length / ((self.h * self.w) / snake.block_size ** 2)
+
+        x, y, block = state.snake_body[0].x, state.snake_body[0].y, snake.block_size
+        w, h = self.w, self.h
+        x_apple, y_apple = state.apple_location.x, state.apple_location.y
+
+        if state.head_direction == snake.RIGHT:
+            # 0,1=>Straight
+            self.X[0] = x + block == w or Point(x + block, y) in state.snake_body
+            self.X[1] = x + block * 2 >= w or Point(x + block * 2, y) in state.snake_body or self.X[0]
+            self.X[2] = x + block * 3 >= w or Point(x + block * 3, y) in state.snake_body or self.X[1]
+            # 2,3=>Left (up)
+            self.X[3] = y == 0 or Point(x, y - block) in state.snake_body
+            self.X[4] = y - block <= 0 or Point(x, y - block * 2) in state.snake_body or self.X[3]
+            self.X[5] = y - block * 2 <= 0 or Point(x, y - block * 3) in state.snake_body or self.X[4]
+            # 4,5=>Right (down)
+            self.X[6] = y + block == h or Point(x, y + block) in state.snake_body
+            self.X[7] = y + block * 2 >= h or Point(x, y + block * 2) in state.snake_body or self.X[6]
+            self.X[8] = y + block * 3 >= h or Point(x, y + block * 3) in state.snake_body or self.X[7]
+            # 6,7,8=>Apple
+            self.X[9], self.X[10], self.X[11] = x < x_apple, y > y_apple, y < y_apple
+            # 12,13,14,15=>Diag
+            self.X[12] = Point(x + block, y - block) in state.snake_body or x + block == w or y - block < 0
+            self.X[13] = Point(x + block * 2, y - block * 2) in state.snake_body \
+                         or x + block * 2 >= w or y - block * 2 < 0 or self.X[12]
+            self.X[14] = Point(x + block, y + block) in state.snake_body or x + block == w or y + block == h
+            self.X[15] = Point(x + block * 2, y + block * 2) in state.snake_body \
+                         or x + block * 2 >= w or y + block * 2 >= h or self.X[14]
+            # self.X[16]=Point(x+block*2,y-block*2) in state.snake_body or x+block*2>=w or
+            # self.X[17]=
+        elif state.head_direction == snake.LEFT:
+            # 0,1=>Straight
+            self.X[0] = x == 0 or Point(x - block, y) in state.snake_body
+            self.X[1] = x - block <= 0 or Point(x - block * 2, y) in state.snake_body or self.X[0]
+            self.X[2] = x - block * 2 <= 0 or Point(x - block * 3, y) in state.snake_body or self.X[1]
+            # 2,3=>Left (down)
+            self.X[3] = y + block == h or Point(x, y + block) in state.snake_body
+            self.X[4] = y + block * 2 >= h or Point(x, y + block * 2) in state.snake_body or self.X[3]
+            self.X[5] = y + block * 3 >= h or Point(x, y + block * 3) in state.snake_body or self.X[4]
+            # 4,5=> Right (up)
+            self.X[6] = y == 0 or Point(x, y - block) in state.snake_body
+            self.X[7] = y - block <= 0 or Point(x, y - block * 2) in state.snake_body or self.X[6]
+            self.X[8] = y - block * 2 <= 0 or Point(x, y - block * 3) in state.snake_body or self.X[7]
+            # 6,7,8=>Apple
+            self.X[9], self.X[10], self.X[11] = x > x_apple, y < y_apple, y > y_apple
+            # 12,13,14,15=>Diag
+            self.X[12] = Point(x - block, y + block) in state.snake_body or x == 0 or y + block == h
+            self.X[13] = Point(x - block * 2,
+                               y + block * 2) in state.snake_body or x - block <= 0 or y + 2 * block >= h or self.X[12]
+            self.X[14] = Point(x - block, y - block) in state.snake_body or x == 0 or y == 0
+            self.X[15] = Point(x - block * 2, y - block * 2) in state.snake_body or x - block <= 0 or y - block <= 0 or \
+                         self.X[14]
+        elif state.head_direction == snake.UP:
+            # 0,1=>Straight
+            self.X[0] = y == 0 or Point(x, y - block) in state.snake_body
+            self.X[1] = y - block <= 0 or Point(x, y - block * 2) in state.snake_body or self.X[0]
+            self.X[2] = y - block + 2 <= 0 or Point(x, y - block * 3) in state.snake_body or self.X[1]
+            # 2,3=>Left (left)
+            self.X[3] = x == 0 or Point(x - block, y) in state.snake_body
+            self.X[4] = x - block <= 0 or Point(x - block * 2, y) in state.snake_body or self.X[3]
+            self.X[5] = x - block * 2 <= 0 or Point(x - block * 3, y) in state.snake_body or self.X[4]
+            # 4,5=> Right (right)
+            self.X[6] = x + block == w or Point(x + block, y) in state.snake_body
+            self.X[7] = x + block * 2 >= w or Point(x + block * 2, y) in state.snake_body or self.X[6]
+            self.X[8] = x + block * 3 >= w or Point(x + block * 3, y) in state.snake_body or self.X[7]
+            # 6,7,8=>Apple
+            self.X[9], self.X[10], self.X[11] = y > y_apple, x > x_apple, x < x_apple
+            # 12,13,14,15=>Diag
+            self.X[12] = Point(x - block, y - block) in state.snake_body or x == 0 or y == 0
+            self.X[13] = Point(x - block * 2, y - block * 2) in state.snake_body or x - block <= 0 or y - block <= 0 or \
+                         self.X[12]
+            self.X[14] = Point(x + block, y - block) in state.snake_body or x + block == w or y == 0
+            self.X[15] = Point(x + block * 2,
+                               y - block * 2) in state.snake_body or x + 2 * block >= w or y - block <= 0 or self.X[14]
+        elif state.head_direction == snake.DOWN:
+            # 0,1=>Straight
+            self.X[0] = y + block == h or Point(x, y + block) in state.snake_body
+            self.X[1] = y + block * 2 >= h or Point(x, y + block * 2) in state.snake_body or self.X[0]
+            self.X[2] = y + block * 3 >= h or Point(x, y + block * 3) in state.snake_body or self.X[1]
+            # 2,3=>Left (right)
+            self.X[3] = x + block == h or Point(x + block, y) in state.snake_body
+            self.X[4] = x + block * 2 >= h or Point(x + block * 2, y) in state.snake_body or self.X[3]
+            self.X[5] = x + block * 3 >= h or Point(x + block * 3, y) in state.snake_body or self.X[4]
+            # 4,5=> Right (left)
+            self.X[6] = x == 0 or Point(x - block, y) in state.snake_body
+            self.X[7] = x - block <= 0 or Point(x - block * 2, y) in state.snake_body or self.X[6]
+            self.X[8] = x - block * 3 <= 0 or Point(x - block * 3, y) in state.snake_body or self.X[7]
+            # 6,7,8=>Apple
+            self.X[9], self.X[10], self.X[11] = y < y_apple, x < x_apple, x > x_apple
+            # 12,13,14,15=>Diag
+            self.X[12] = Point(x + block, y + block) in state.snake_body or x + block == w or y + block == h
+            self.X[13] = Point(x + block * 2,
+                               y + block * 2) in state.snake_body or x + 2 * block >= w or y + 2 * block >= h or self.X[
+                             12]
+            self.X[14] = Point(x - block, y + block) in state.snake_body or x == 0 or y + block == h
+            self.X[15] = Point(x - block * 2,
+                               y + block * 2) in state.snake_body or x - block <= 0 or y + 2 * block >= h or self.X[14]
+
     def __str__(self) -> str:
         """
         print details of X for debugging
