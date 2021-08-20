@@ -645,12 +645,11 @@ class Data:
             self.X[9], self.X[10], self.X[11] = y < y_apple, x < x_apple, x > x_apple
             # 12,13,14,15=>Diag
             self.X[12] = Point(x + block, y + block) in state.snake_body or x + block == w or y + block == h
-            self.X[13] = Point(x + block * 2,
-                               y + block * 2) in state.snake_body or x + 2 * block >= w or y + 2 * block >= h or self.X[
-                             12]
+            self.X[13] = Point(x + block * 2, y + block * 2) in state.snake_body or x + 2 * block >= w \
+                         or y + 2 * block >= h or self.X[12]
             self.X[14] = Point(x - block, y + block) in state.snake_body or x == 0 or y + block == h
-            self.X[15] = Point(x - block * 2,
-                               y + block * 2) in state.snake_body or x - block <= 0 or y + 2 * block >= h or self.X[14]
+            self.X[15] = Point(x - block * 2, y + block * 2) in state.snake_body or x - block <= 0 \
+                         or y + 2 * block >= h or self.X[14]
 
     def __str__(self) -> str:
         """

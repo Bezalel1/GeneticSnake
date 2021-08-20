@@ -81,7 +81,7 @@ class Agent:
                 player.play()
                 self.fitness[j] = self.evaluation(player)
             self.crossover(curr_gen_idx)
-            self.mutation(curr_gen_idx, eps=0.01)
+            self.mutation(curr_gen_idx, eps=1.)
             # time.sleep(3)
 
         if save:
@@ -95,7 +95,7 @@ class Agent:
         """
         fitness = player.steps + self.snake.score * 10
 
-        if self.snake.score >= 35:
+        if self.snake.score >= 28:
             print(f'apple=>score={self.snake.score}, steps={player.steps}, fitness={fitness}')
 
         if fitness > self.best_fitness:
@@ -114,14 +114,14 @@ class Agent:
             The number of occurrences of each index will be in probability according
             to its performance in the game.
         """
-        best_dna_idx = np.argwhere(self.fitness >= 50).reshape((-1,))
+        best_dna_idx = np.argwhere(self.fitness >= 0).reshape((-1,))
         if len(best_dna_idx):
             fitness = self.fitness[best_dna_idx]
         else:
             best_dna_idx = np.arange(self.fitness.shape[0])
             fitness = self.fitness[best_dna_idx] + np.abs(np.min(self.fitness[best_dna_idx]))
 
-        fitness *= fitness
+        fitness = fitness ** 4
         probability = fitness / float(np.sum(fitness))
         if np.inf in probability:
             print(probability)
@@ -188,7 +188,7 @@ class Agent:
 
             for j in range(start, end):
                 k = random.randint(0, len(shapes) - 1)
-                size = (shapes[k][0] * shapes[k][1]) // 5
+                size = 1  # (shapes[k][0] * shapes[k][1]) // 5
                 x = np.random.randint(0, shapes[k][0], size=size)
                 y = np.random.randint(0, shapes[k][1], size=size)
                 self.generation[j].W[k][x, y] += np.random.uniform(low=-1, high=1, size=(size,)) * eps_
