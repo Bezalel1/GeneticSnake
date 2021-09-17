@@ -51,9 +51,30 @@ selected parents.
 
 Mutation 1/2 of the new generation.
 
+### Performance
+
+![plot](saved%20data/fig.png)
+
+* Right:
+    - blue - parents&mutation mean.
+    - black - parent mean.
+    - red - child mead.
+    - green - child&mutation mean.
+    - yellow - total mean.
+* Left: total maximum.
+
+The max Score reached around 65%-75% of the game table.
+
 ## Code Structure
 
-play.py - to start training the snake game using genetic algorithm. genetic.py - the genetic algorithm and the players.
-neural_network.py - simple version of neural network which represent the gen of each snake player. helper.py - Data and
-State classes that helping represent the data of the snake for feeding to the neural network. snake.py - contains the
-logic for creating snake game using pygame. setting - main setting for the project.
+play.py - to start training the snake game using genetic algorithm.
+
+genetic.py - the genetic algorithm and the players.
+
+neural_network.py - simple version of neural network which represent the gen of each snake player.
+
+helper.py - Data and State classes that helping represent the data of the snake for feeding to the neural network.
+
+snake.py - contains the logic for creating snake game using pygame.
+
+setting - main setting for the project.
