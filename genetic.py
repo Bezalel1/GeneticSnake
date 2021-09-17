@@ -34,7 +34,7 @@ class Player(NN):
             else:
                 self.steps -= 1.5
 
-            self.data.setX7(State(self.snake.snake, self.snake.food, self.snake.direction, self.snake.score + 3))
+            self.data.setX3(State(self.snake.snake, self.snake.food, self.snake.direction, self.snake.score + 3))
             direction = int(self.predict(self.data.X.reshape((1, -1))))
 
             # check if snake stack in endless loop
