@@ -7,3 +7,4 @@ agent.train(load=False, save=True)
 # demonstration with a GUI
 agent = Agent([20 for _ in range(3)], gui=True)
 agent.train(load=True, save=False)
+
