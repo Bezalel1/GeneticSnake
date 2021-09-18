@@ -1,4 +1,4 @@
-setting = {'width': 8, 'height': 8, 'block_size': 40, 'speed': 20, 'layers': [10, 30, 50, 30, 3],
+setting = {'width': 8, 'height': 8, 'block_size': 20, 'speed': 20, 'layers': [10, 30, 50, 30, 3],
            'vision mode': 4}
 
 # set3
