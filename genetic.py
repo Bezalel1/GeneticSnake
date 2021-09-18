@@ -205,12 +205,12 @@ class Agent:
         np.save(file_name + '.npy', save_object, allow_pickle=True)
 
         try:
-            with open('history', 'wb') as f:
+            with open('saved data/history', 'wb') as f:
                 pickle.dump(self.history, f)
         except Exception as e:
             print(e)
         try:
-            with open('best_snake', 'wb') as f:
+            with open('saved data/best_snake', 'wb') as f:
                 pickle.dump((self.best_player.W, self.best_fitness), f)
         except Exception as e:
             print('save:', e)
@@ -222,13 +222,13 @@ class Agent:
         self.generation = np.array([Player(W, self.snake, self.data) for W in load_object])
 
         try:
-            with open('history', 'rb') as f:
+            with open('saved data/history', 'rb') as f:
                 self.history = pickle.load(f)
         except Exception as e:
             print(e)
 
         try:
-            with open('best_snake', 'rb') as f:
+            with open('saved data/best_snake', 'rb') as f:
                 W, self.best_fitness = pickle.load(f)
                 self.best_player = Player(W, self.snake, self.data)
         except Exception as e:
@@ -236,7 +236,7 @@ class Agent:
 
     def demonstration(self) -> None:
         try:
-            with open('best_snake', 'rb') as f:
+            with open('saved data/best_snake', 'rb') as f:
                 self.best_player = Player(pickle.load(f)[0], self.snake, self.data)
                 self.best_player.play()
         except Exception as e:
